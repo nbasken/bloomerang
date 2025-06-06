@@ -297,12 +297,10 @@ def check_for_duplicate_names(first_name: str, last_name: str) -> list:
     except Exception as e:
         return []
 
-# Replace the format_household_names_with_relationship function
-# Find this function around line 200-400 and replace the entire function:
 
 def format_household_names_with_relationship(first1: str, last1: str, first2: str, last2: str, 
                                            rel1: str = "", rel2: str = "", children: List[Dict] = None) -> Dict[str, str]:
-    """Format household names according to the relationship type"""
+    """Format household names according to the Bloomerang relationship format specifications"""
     
     def is_parent_child_relationship(r1: str, r2: str) -> bool:
         parent_roles = ['mother', 'father', 'mom', 'dad']
@@ -335,7 +333,7 @@ def format_household_names_with_relationship(first1: str, last1: str, first2: st
         parent_roles = ['mother', 'father', 'mom', 'dad']
         return (not first2_param or not last2_param) and rel1_param.lower() in parent_roles and children_param and len(children_param) > 0
     
-    # PRIORITY CHECK: Single parent with children - use single parent format
+    # PRIORITY 1: Single parent with children
     if is_single_parent(first2, last2, rel1, children):
         parent_title = "Ms." if rel1.lower() in ['mother', 'mom'] else "Mr."
         
@@ -348,128 +346,35 @@ def format_household_names_with_relationship(first1: str, last1: str, first2: st
             "RecognitionName": f"{parent_title} {first1} {last1}"
         }
     
-    # Two parents with children - family household
+    # PRIORITY 2: Two people with children - family households
     if children and len(children) > 0 and first2 and last2:
-        # Married parents (husband/wife)
+        # Married parents (husband/wife) with children
         if is_spouse_relationship(rel1, rel2):
-            # Use husband's last name for family name, but check for different last names
             if last1.lower() == last2.lower():
-                # Same last name - traditional married format
-                family_last_name = last1
+                # Husband and Wife (same last name) with children
                 return {
-                    "FullName": f"The {first1} {family_last_name} Family",
-                    "SortName": f"{family_last_name}, {first1} and {first2}",
+                    "FullName": f"The {first1} {last1} Family",
+                    "SortName": f"{last1}, {first1} and {first2}",
                     "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"Mr. and Mrs. {family_last_name}",
-                    "EnvelopeName": f"{first1} and {first2} {family_last_name}",
-                    "RecognitionName": f"Mr. and Mrs. {first1} and {first2} {family_last_name}"
+                    "FormalName": f"Mr. and Mrs. {last1}",
+                    "EnvelopeName": f"{first1} and {first2} {last1}",
+                    "RecognitionName": f"Mr. and Mrs. {first1} and {first2} {last1}"
                 }
             else:
-                # Different last names - modern married format
+                # Husband and Wife (different last name) with children
                 return {
                     "FullName": f"The {last1}/{last2} Family",
                     "SortName": f"{last1}, {first1} and {first2} {last2}",
                     "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"Mr. {last1} and Mrs. {last2}",
+                    "FormalName": f"Mr. {last1} and Ms. {last2}",
                     "EnvelopeName": f"{first1} {last1} and {first2} {last2}",
-                    "RecognitionName": f"Mr. {first1} {last1} and Mrs. {first2} {last2}"
+                    "RecognitionName": f"Mr. {first1} {last1} and Ms. {first2} {last2}"
                 }
         
-        # Unmarried parents (father/mother)
+        # Unmarried parents (father/mother) with children
         elif is_unmarried_parents(rel1, rel2):
             if last1.lower() == last2.lower():
-                # Same last name - unmarried parents
-                return {
-                    "FullName": f"The {last1} Family",
-                    "SortName": f"{last1}, {first1} and {first2}",
-                    "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"The {last1} Family",
-                    "EnvelopeName": f"{first1} and {first2} {last1}",
-                    "RecognitionName": f"The {first1} and {first2} {last1} Family"
-                }
-            else:
-                # Different last names - unmarried parents format
-                parent1_title = "Mr." if rel1.lower() in ['father', 'dad'] else "Ms."
-                parent2_title = "Mr." if rel2.lower() in ['father', 'dad'] else "Ms."
-                return {
-                    "FullName": f"The {last1}/{last2} Family",
-                    "SortName": f"{last1}, {first1} and {first2} {last2}",
-                    "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"{parent1_title} {last1} and {parent2_title} {last2}",
-                    "EnvelopeName": f"{first1} {last1} and {first2} {last2}",
-                    "RecognitionName": f"{parent1_title} {first1} {last1} and {parent2_title} {first2} {last2}"
-                }
-        
-        # Default family format with children (when relationships aren't clearly defined)
-        else:
-            if last1.lower() == last2.lower():
-                # Same last name - generic family format
-                return {
-                    "FullName": f"The {last1} Family",
-                    "SortName": f"{last1}, {first1} and {first2}",
-                    "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"The {last1} Family",
-                    "EnvelopeName": f"{first1} and {first2} {last1}",
-                    "RecognitionName": f"The {first1} and {first2} {last1} Family"
-                }
-            else:
-                # Different last names - generic family format
-                return {
-                    "FullName": f"The {last1}/{last2} Family",
-                    "SortName": f"{last1}, {first1} and {first2} {last2}",
-                    "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"The {last1}/{last2} Family",
-                    "EnvelopeName": f"{first1} {last1} and {first2} {last2}",
-                    "RecognitionName": f"The {first1} {last1} and {first2} {last2} Family"
-                }
-    
-    # Two adults, no children scenarios
-    if first2 and last2 and (not children or len(children) == 0):
-        # Parent-child relationship between adults - use single parent format
-        if is_parent_child_relationship(rel1, rel2):
-            parent_roles = ['mother', 'father', 'mom', 'dad']
-            if rel1.lower() in parent_roles:
-                parent_first, parent_last = first1, last1
-                parent_title = "Ms." if rel1.lower() in ['mother', 'mom'] else "Mr."
-            else:
-                parent_first, parent_last = first2, last2
-                parent_title = "Ms." if rel2.lower() in ['mother', 'mom'] else "Mr."
-            
-            return {
-                "FullName": f"The {parent_last} Family",
-                "SortName": f"{parent_last}, {parent_first}",
-                "InformalName": parent_first,
-                "FormalName": f"{parent_title} {parent_last}",
-                "EnvelopeName": f"{parent_first} {parent_last}",
-                "RecognitionName": f"{parent_title} {parent_first} {parent_last}"
-            }
-        
-        # Sibling relationship with same last name
-        elif is_sibling_relationship(rel1, rel2) and last1.lower() == last2.lower():
-            return {
-                "FullName": f"The {last1} Family",
-                "SortName": f"{last1}, {first1} and {first2}",
-                "InformalName": f"{first1} and {first2}",
-                "FormalName": f"The {last1} Siblings",
-                "EnvelopeName": f"{first1} and {first2} {last1}",
-                "RecognitionName": f"{first1} and {first2} {last1}"
-            }
-        
-        # Sibling relationship with different last names
-        elif is_sibling_relationship(rel1, rel2) and last1.lower() != last2.lower():
-            return {
-                "FullName": f"The {last1}/{last2} Family",
-                "SortName": f"{last1}, {first1} and {first2} {last2}",
-                "InformalName": f"{first1} and {first2}",
-                "FormalName": f"The {last1}/{last2} Siblings",
-                "EnvelopeName": f"{first1} {last1} and {first2} {last2}",
-                "RecognitionName": f"{first1} {last1} and {first2} {last2}"
-            }
-        
-        # Spouse relationship - married couple
-        elif is_spouse_relationship(rel1, rel2):
-            if last1.lower() == last2.lower():
-                # Same last name
+                # Father and mother (same last name) - same as husband/wife
                 return {
                     "FullName": f"The {first1} {last1} Family",
                     "SortName": f"{last1}, {first1} and {first2}",
@@ -479,30 +384,7 @@ def format_household_names_with_relationship(first1: str, last1: str, first2: st
                     "RecognitionName": f"Mr. and Mrs. {first1} and {first2} {last1}"
                 }
             else:
-                # Different last names
-                return {
-                    "FullName": f"The {last1}/{last2} Family",
-                    "SortName": f"{last1}, {first1} and {first2} {last2}",
-                    "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"Mr. {last1} and Mrs. {last2}",
-                    "EnvelopeName": f"{first1} {last1} and {first2} {last2}",
-                    "RecognitionName": f"Mr. {first1} {last1} and Mrs. {first2} {last2}"
-                }
-        
-        # No specific relationship - generic couple format
-        else:
-            if last1.lower() == last2.lower():
-                # Same last name
-                return {
-                    "FullName": f"The {first1} {last1} Family",
-                    "SortName": f"{last1}, {first1} and {first2}",
-                    "InformalName": f"{first1} and {first2}",
-                    "FormalName": f"Mr. and Mrs. {last1}",
-                    "EnvelopeName": f"{first1} and {first2} {last1}",
-                    "RecognitionName": f"Mr. and Mrs. {first1} and {first2} {last1}"
-                }
-            else:
-                # Different last names
+                # Father and mother (different last name) - same as no relationship different names
                 return {
                     "FullName": f"The {last1}/{last2} Family",
                     "SortName": f"{last1}, {first1} and {first2} {last2}",
@@ -512,15 +394,93 @@ def format_household_names_with_relationship(first1: str, last1: str, first2: st
                     "RecognitionName": f"Mr. {first1} {last1} and Ms. {first2} {last2}"
                 }
     
-    # Fallback for any remaining cases - shouldn't happen but good to have
-    return {
-        "FullName": f"The {last1} Family",
-        "SortName": f"{last1}, {first1}",
-        "InformalName": first1,
-        "FormalName": f"The {last1} Family",
-        "EnvelopeName": f"{first1} {last1}",
-        "RecognitionName": f"The {first1} {last1} Family"
-    }
+    # PRIORITY 3: Two people without children
+    if first2 and last2:
+        # Married couple (husband/wife) without children
+        if is_spouse_relationship(rel1, rel2):
+            if last1.lower() == last2.lower():
+                # Husband and Wife (same last name)
+                return {
+                    "FullName": f"The {first1} {last1} Family",
+                    "SortName": f"{last1}, {first1} and {first2}",
+                    "InformalName": f"{first1} and {first2}",
+                    "FormalName": f"Mr. and Mrs. {last1}",
+                    "EnvelopeName": f"{first1} and {first2} {last1}",
+                    "RecognitionName": f"Mr. and Mrs. {first1} and {first2} {last1}"
+                }
+            else:
+                # Husband and Wife (different last name)
+                return {
+                    "FullName": f"The {last1}/{last2} Family",
+                    "SortName": f"{last1}, {first1} and {first2} {last2}",
+                    "InformalName": f"{first1} and {first2}",
+                    "FormalName": f"Mr. {last1} and Ms. {last2}",
+                    "EnvelopeName": f"{first1} {last1} and {first2} {last2}",
+                    "RecognitionName": f"Mr. {first1} {last1} and Ms. {first2} {last2}"
+                }
+        
+        # Siblings
+        elif is_sibling_relationship(rel1, rel2):
+            # Get proper titles for siblings
+            title1 = "Mr." if rel1.lower() == 'brother' else "Ms."
+            title2 = "Mr." if rel2.lower() == 'brother' else "Ms."
+            
+            return {
+                "FullName": f"The {last1} Family",
+                "SortName": f"{last1}, {first1} and {first2}",
+                "InformalName": f"{first1} and {first2}",
+                "FormalName": f"{title1} {first1} and {title2} {first2} {last1}",
+                "EnvelopeName": f"{first1} and {first2} {last1}",
+                "RecognitionName": f"{title1} {first1} and {title2} {first2} {last1}"
+            }
+        
+        # Same household - no relationship
+        else:
+            if last1.lower() == last2.lower():
+                # Same household - no relationship (same last name)
+                return {
+                    "FullName": f"The {last1} Family",
+                    "SortName": f"{last1}, {first1} and {first2}",
+                    "InformalName": f"{first1} and {first2}",
+                    "FormalName": f"Mr. {first1} {last1} and Ms. {first2} {last1}",
+                    "EnvelopeName": f"{first1} and {first2} {last1}",
+                    "RecognitionName": f"Mr. {first1} and Ms. {first2} {last1}"
+                }
+            else:
+                # Same household - no relationship (different last name)
+                return {
+                    "FullName": f"The {last1}/{last2} Family",
+                    "SortName": f"{last1}, {first1} and {first2} {last2}",
+                    "InformalName": f"{first1} and {first2}",
+                    "FormalName": f"Mr. {last1} and Ms. {last2}",
+                    "EnvelopeName": f"{first1} {last1} and {first2} {last2}",
+                    "RecognitionName": f"Mr. {first1} {last1} and Ms. {first2} {last2}"
+                }
+    
+    # FALLBACK: Single person (possibly with children)
+    # This handles single parent case or just single person
+    if children and len(children) > 0:
+        # Single parent case
+        parent_title = "Ms." if rel1.lower() in ['mother', 'mom'] else "Mr."
+        return {
+            "FullName": f"The {last1} Family",
+            "SortName": f"{last1}, {first1}",
+            "InformalName": first1,
+            "FormalName": f"{parent_title} {last1}",
+            "EnvelopeName": f"{first1} {last1}",
+            "RecognitionName": f"{parent_title} {first1} {last1}"
+        }
+    else:
+        # Single person household
+        title = "Mr." if rel1.lower() in ['husband', 'father', 'brother'] else "Ms."
+        return {
+            "FullName": f"The {last1} Family",
+            "SortName": f"{last1}, {first1}",
+            "InformalName": first1,
+            "FormalName": f"{title} {last1}",
+            "EnvelopeName": f"{first1} {last1}",
+            "RecognitionName": f"{title} {first1} {last1}"
+        }
 
 def get_existing_relationships(person_id: int) -> List[Dict]:
     """Get all existing relationships for a person"""
