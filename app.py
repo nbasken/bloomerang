@@ -17,13 +17,17 @@ def check_password():
     def password_entered():
         """Checks whether a password entered by the user is correct."""
         if st.session_state["password"] == st.secrets["app_password"]:
-            st.session_state["password_correct"] = True
+            st.session_state["authenticated"] = True
+            st.session_state["auth_time"] = str(hash(st.secrets["app_password"]))
             del st.session_state["password"]  # Don't store password in memory
         else:
-            st.session_state["password_correct"] = False
+            st.session_state["authenticated"] = False
+
+    if st.session_state.get("authenticated") and st.session_state.get("auth_time"):
+        return True
 
     # First run - no password entered yet
-    if "password_correct" not in st.session_state:
+    if "authenticated" not in st.session_state or not st.session_state.get("authenticated"):
         st.markdown("# 🔐 Bloomerang Relationship Manager")
         st.markdown("---")
         st.info("This application is for authorized staff only. Please enter the password to continue.")
@@ -56,16 +60,22 @@ def check_password():
     
     # Password correct
     else:
-        return True
+        return False
 
 def add_logout_button():
     """Add a logout button to the sidebar"""
     with st.sidebar:
         st.markdown("---")
-        if st.button("🚪 Logout", help="Clear session and return to login"):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.rerun()
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.text("✅ Authenticated")
+        with col2:
+            if st.button("🚪", help="Logout and clear session"):
+                # Clear authentication but keep other session data
+                st.session_state["authenticated"] = False
+                if "auth_time" in st.session_state:
+                    del st.session_state["auth_time"]
+                st.rerun()  
 
 # =====================================================
 # App Entry
