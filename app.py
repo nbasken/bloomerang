@@ -13,7 +13,11 @@ st.set_page_config(
 # Authentification
 def check_password():
     """Returns `True` if the user had the correct password."""
-    
+    query_params = st.query_params
+    if "authenticated" in query_params and query_params["authenticated"] == "true":
+        st.session_state["authenticated"] = True
+        st.session_state["auth_time"] = str(hash(st.secrets["app_password"]))
+
     def password_entered():
         """Checks whether a password entered by the user is correct."""
         if st.session_state["password"] == st.secrets["app_password"]:
@@ -28,7 +32,7 @@ def check_password():
 
     # First run - no password entered yet
     if "authenticated" not in st.session_state or not st.session_state.get("authenticated"):
-        st.markdown("# 🔐 Bloomerang Relationship Manager")
+        st.markdown("# Bloomerang Relationship Manager")
         st.markdown("---")
         st.info("This application is for authorized staff only. Please enter the password to continue.")
         st.text_input(
