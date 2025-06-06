@@ -12,6 +12,9 @@ st.set_page_config(
 # =====================================================
 # Authentification
 def check_password():
+    st.sidebar.write(f"Debug - authenticated: {st.session_state.get('authenticated')}")
+    st.sidebar.write(f"Debug - auth_time: {st.session_state.get('auth_time')}")
+    st.sidebar.write(f"Debug - expected hash: {str(hash(st.secrets['app_password']))}")
     """Returns `True` if the user had the correct password."""
     query_params = st.query_params
     if "authenticated" in query_params and query_params["authenticated"] == "true":
