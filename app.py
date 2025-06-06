@@ -2,107 +2,17 @@ import streamlit as st
 import requests
 from typing import Dict, Optional, Tuple, List
 
-st.set_page_config(
-    page_title="Bloomerang Household Manager",
-    page_icon="🏠",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# =====================================================
-# Authentification
-def check_password():
-    st.sidebar.write(f"Debug - authenticated: {st.session_state.get('authenticated')}")
-    st.sidebar.write(f"Debug - auth_time: {st.session_state.get('auth_time')}")
-    st.sidebar.write(f"Debug - expected hash: {str(hash(st.secrets['app_password']))}")
-    """Returns `True` if the user had the correct password."""
-    query_params = st.query_params
-    if "authenticated" in query_params and query_params["authenticated"] == "true":
-        st.session_state["authenticated"] = True
-        st.session_state["auth_time"] = str(hash(st.secrets["app_password"]))
-
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == st.secrets["app_password"]:
-            st.session_state["authenticated"] = True
-            st.session_state["auth_time"] = str(hash(st.secrets["app_password"]))
-            del st.session_state["password"]  # Don't store password in memory
-        else:
-            st.session_state["authenticated"] = False
-
-    if st.session_state.get("authenticated") and st.session_state.get("auth_time"):
-        return True
-
-    # First run - no password entered yet
-    if "authenticated" not in st.session_state or not st.session_state.get("authenticated"):
-        st.markdown("# Bloomerang Relationship Manager")
-        st.markdown("---")
-        st.info("This application is for authorized staff only. Please enter the password to continue.")
-        st.text_input(
-            "Password", 
-            type="password", 
-            on_change=password_entered, 
-            key="password",
-            help="Contact your administrator if you need the password"
-        )
-        st.markdown("---")
-        st.markdown("*Authorized users only - Unauthorized access is prohibited*")
-        return False
-    
-    # Password was incorrect
-    elif not st.session_state["password_correct"]:
-        st.markdown("# 🔐 Bloomerang Relationship Manager")
-        st.markdown("---")
-        st.error("❌ Incorrect password. Please try again.")
-        st.text_input(
-            "Password", 
-            type="password", 
-            on_change=password_entered, 
-            key="password",
-            help="Contact your administrator if you need the password"
-        )
-        st.markdown("---")
-        st.markdown("*Authorized users only - Unauthorized access is prohibited*")
-        return False
-    
-    # Password correct
-    else:
-        return False
-
-def add_logout_button():
-    """Add a logout button to the sidebar"""
-    with st.sidebar:
-        st.markdown("---")
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.text("✅ Authenticated")
-        with col2:
-            if st.button("🚪", help="Logout and clear session"):
-                # Clear authentication but keep other session data
-                st.session_state["authenticated"] = False
-                if "auth_time" in st.session_state:
-                    del st.session_state["auth_time"]
-                st.rerun()  
-
-# =====================================================
-# App Entry
-if not check_password():
-    st.stop()
-
-# API Configuration
+# Configuration - You can move this to environment variables later
 API_BASE_URL = "https://api.bloomerang.co/v2"
-try:
-    API_KEY = st.secrets["BLOOMERANG_API_KEY"]
-except KeyError:
-    st.error("❌ API configuration error. Please contact the administrator.")
-    st.info("The application is not properly configured. Contact your system administrator.")
-    st.stop()
+API_KEY = st.secrets["BLOOMERANG_API_KEY"]
+
+# Headers for API requests
 HEADERS = {
     "Content-Type": "application/json",
     "X-API-KEY": API_KEY
 }
-add_logout_button()
 
+# Relationship role IDs from your Bloomerang system
 RELATIONSHIP_ROLES = {
     'brother': 16,
     'co-worker': 17,
@@ -1972,6 +1882,12 @@ def add_member_to_household(household_id: int, new_member_data: Dict) -> bool:
         return False
 
 def main():
+    st.set_page_config(
+        page_title="Bloomerang Household Manager",
+        page_icon="🏠",
+        layout="wide",
+        initial_sidebar_state="collapsed"
+    )
     if 'cached_constituents' not in st.session_state:
         st.session_state['cached_constituents'] = {}
     if 'cached_households' not in st.session_state:
