@@ -713,12 +713,11 @@ def create_new_household_interface():
     # Input method selection
     search_method = st.radio(
         "How would you like to identify people?",
-        ["By Name", "By Account Number"],
+        ["By Account Number", "By Name"],
         key="search_method"
     )
     
     col1, col2 = st.columns(2)
-    
     # Parent 1 (Left Column)
     with col1:
         st.markdown("**👤 Parent 1**")
@@ -757,7 +756,7 @@ def create_new_household_interface():
         
         person1_relationship = st.selectbox(
             "Relationship", 
-            ["", "father", "mother", "husband", "wife"],
+            ["", "father", "mother", "husband", "wife","brother","sister"],
             key="person1_relationship",
             help="Leave blank if no specific relationship needed"
         )
@@ -775,8 +774,6 @@ def create_new_household_interface():
                     if st.session_state.get('person1_existing_household'):
                         household = st.session_state['person1_existing_household']
                         st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
-                    else:
-                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
                 else:
                     st.error("❌ Person not found - will be created as new constituent")
             elif person1_first or person1_last:  # Only show if partially filled
@@ -801,8 +798,6 @@ def create_new_household_interface():
                     
                     if person1_household:
                         st.warning(f"⚠️ This person is already in household: {person1_household['FullName']} (ID: {person1_household['Id']})")
-                    else:
-                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
                 else:
                     st.error("❌ Account number not found - person will be created as new constituent")
     
@@ -844,7 +839,7 @@ def create_new_household_interface():
         
         person2_relationship = st.selectbox(
             "Relationship", 
-            ["", "father", "mother", "husband", "wife"],
+            ["", "father", "mother", "husband", "wife","brother","sister"],
             key="person2_relationship",
             help="Leave blank if no specific relationship needed"
         )
@@ -862,8 +857,6 @@ def create_new_household_interface():
                     if st.session_state.get('person2_existing_household'):
                         household = st.session_state['person2_existing_household']
                         st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
-                    else:
-                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
                 else:
                     st.error("❌ Person not found - will be created as new constituent")
             elif person2_first or person2_last:  # Only show if partially filled
@@ -888,8 +881,6 @@ def create_new_household_interface():
                     
                     if person2_household:
                         st.warning(f"⚠️ This person is already in household: {person2_household['FullName']} (ID: {person2_household['Id']})")
-                    else:
-                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
                 else:
                     st.error("❌ Account number not found - person will be created as new constituent")
     
@@ -1122,8 +1113,6 @@ def create_new_household_interface():
                     st.balloons()
                 else:
                     st.error("❌ Failed to create household")
-    else:
-        st.info("👆 Enter at least one person to preview the household")
 
 def on_relationship_change():
     """Callback function when relationship dropdowns change"""
