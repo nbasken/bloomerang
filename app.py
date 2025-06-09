@@ -1155,6 +1155,8 @@ def create_new_household_interface():
                 # Check if it's a married couple vs unmarried parents
                 if final_rel1 in ['husband', 'wife'] and final_rel2 in ['husband', 'wife']:
                     all_relationships.append((0, 1, final_rel1, final_rel2))
+                elif final_rel1 in ['brother', 'sister'] and final_rel2 in ['brother', 'sister']:
+                    all_relationships.append((0, 1, final_rel1, final_rel2))
                 # For unmarried parents (father/mother), we don't create a relationship between them
             
             # Parent-child relationships
