@@ -1365,8 +1365,6 @@ def add_to_existing_household_interface():
     if 'new_person_data' not in st.session_state:
         st.session_state['new_person_data'] = None
     
-    st.markdown("### 🔍 Find Existing Person/Household")
-    
     # Search method selection
     search_method = st.radio(
         "How would you like to find the existing person?",
@@ -1839,7 +1837,7 @@ def main():
     st.title("🏠 Bloomerang Household Manager")
     st.markdown("Create new households or add people to existing households")
     
-    with st.expander("📖Instructions & Family Types"):
+    with st.expander("📖 Instructions & Family Types"):
         st.markdown("""
         ### Instructions
         1. **Enter names** for both adults (or just one if single parent)
