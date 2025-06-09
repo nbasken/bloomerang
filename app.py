@@ -690,414 +690,574 @@ def create_household_with_children(people_data: List[Dict], household_names: Dic
 # INTERFACE FUNCTIONS
 # =====================================================
 
-# REPLACE the create_new_household_interface() function
-# (starts around line 1490, replace the entire function)
-
 def create_new_household_interface():
-    """Interface for creating new households - enhanced with person search"""
+    """Interface for creating new households - your existing functionality"""
     
     # Initialize session state for children
     if 'new_children' not in st.session_state:
         st.session_state['new_children'] = []
     
-    # Initialize session state for person search results
-    if 'person1_search_result' not in st.session_state:
-        st.session_state['person1_search_result'] = None
-    if 'person1_existing_household' not in st.session_state:
-        st.session_state['person1_existing_household'] = None
-    if 'person2_search_result' not in st.session_state:
-        st.session_state['person2_search_result'] = None
-    if 'person2_existing_household' not in st.session_state:
-        st.session_state['person2_existing_household'] = None
-    
     # Input method selection
     search_method = st.radio(
         "How would you like to identify people?",
         ["By Account Number", "By Name"],
-        key="search_method"
+        help="Names work for most cases, but Account Numbers are unique if there are duplicate names",
+        key="new_search_method"
     )
     
+    # Main form for parents
     col1, col2 = st.columns(2)
-    # Parent 1 (Left Column)
-    with col1:
-        st.markdown("**👤 Parent 1**")
-        
-        if search_method == "By Name":
-            person1_first = st.text_input(
-                "First Name", 
-                key="person1_first",
-                on_change=auto_search_person_by_name,
-                args=(1,),
-                placeholder="Start typing to search automatically..."
-            )
-            person1_last = st.text_input(
-                "Last Name", 
-                key="person1_last",
-                on_change=auto_search_person_by_name,
-                args=(1,),
-                placeholder="Start typing to search automatically..."
-            )
-        else:  # By Account Number
-            person1_account = st.text_input(
-                "Account Number", 
-                key="person1_account",
-                placeholder="Enter account number..."
-            )
-        
-        person1_relationship = st.selectbox(
-            "Relationship", 
-            ["", "father", "mother", "husband", "wife","brother","sister"],
-            key="person1_relationship",
-            help="Leave blank if no specific relationship needed"
-        )
-        
-        # Display Person 1 search results
-        if search_method == "By Name":
-            person1_first = st.session_state.get('person1_first', '').strip()
-            person1_last = st.session_state.get('person1_last', '').strip()
-            if person1_first and person1_last:
-                if st.session_state.get('person1_search_result'):
-                    person1_data = st.session_state['person1_search_result']
-                    st.success(f"✅ Found: {person1_data['FirstName']} {person1_data['LastName']} (ID: {person1_data['Id']})")
-                    
-                    # Check if they're already in a household
-                    if st.session_state.get('person1_existing_household'):
-                        household = st.session_state['person1_existing_household']
-                        st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
-                else:
-                    st.error("❌ Person not found - will be created as new constituent")
-            elif person1_first or person1_last:  # Only show if partially filled
-                st.info("ℹ️ Enter both first and last name to search")
-        else:  # By Account Number
-            person1_account = st.session_state.get('person1_account', '').strip()
-            if person1_account:
-                # Search for Person 1 by account if provided
-                person1_search_result = search_constituent_by_account_number(person1_account)
-                st.session_state['person1_search_result'] = person1_search_result
-                
-                if person1_search_result:
-                    st.success(f"✅ Found: {person1_search_result['FirstName']} {person1_search_result['LastName']} (ID: {person1_search_result['Id']})")
-                    
-                    
-                    # Check if they're already in a household
-                    person1_household = check_existing_household(person1_search_result)
-                    st.session_state['person1_existing_household'] = person1_household
-                    
-                    if person1_household:
-                        st.warning(f"⚠️ This person is already in household: {person1_household['FullName']} (ID: {person1_household['Id']})")
-                else:
-                    st.error("❌ Account number not found - person will be created as new constituent")
     
-    # Parent 2 (Right Column)
-    with col2:
-        st.markdown("**👤 Parent 2 (Optional)**")
+    if search_method == "By Name":
+        with col1:
+            st.markdown("### 👤 Person 1 (Parent)")
+            first1 = st.text_input("First Name", key="new_first1", placeholder="John")
+            last1 = st.text_input("Last Name", key="new_last1", placeholder="Smith")
+            rel1 = st.selectbox("Relationship", 
+                               options=["", "husband", "father", "mother", "wife","brother","sister"], 
+                               key="new_rel1",
+                               help="Select parent/spouse role")
         
-        if search_method == "By Name":
-            person2_first = st.text_input(
-                "First Name", 
-                key="person2_first",
-                on_change=auto_search_person_by_name,
-                args=(2,),
-                placeholder="Start typing to search automatically..."
-            )
-            person2_last = st.text_input(
-                "Last Name", 
-                key="person2_last",
-                on_change=auto_search_person_by_name,
-                args=(2,),
-                placeholder="Start typing to search automatically..."
-            )
-        else:  # By Account Number
-            person2_account = st.text_input(
-                "Account Number", 
-                key="person2_account",
-                placeholder="Enter account number..."
-            )
-        
-        person2_relationship = st.selectbox(
-            "Relationship", 
-            ["", "father", "mother", "husband", "wife","brother","sister"],
-            key="person2_relationship",
-            help="Leave blank if no specific relationship needed"
-        )
-        
-        # Display Person 2 search results
-        if search_method == "By Name":
-            person2_first = st.session_state.get('person2_first', '').strip()
-            person2_last = st.session_state.get('person2_last', '').strip()
-            if person2_first and person2_last:
-                if st.session_state.get('person2_search_result'):
-                    person2_data = st.session_state['person2_search_result']
-                    st.success(f"✅ Found: {person2_data['FirstName']} {person2_data['LastName']} (ID: {person2_data['Id']})")
-                    
-                    # Check if they're already in a household
-                    if st.session_state.get('person2_existing_household'):
-                        household = st.session_state['person2_existing_household']
-                        st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
-                else:
-                    st.error("❌ Person not found - will be created as new constituent")
-            elif person2_first or person2_last:  # Only show if partially filled
-                st.info("ℹ️ Enter both first and last name to search")
-        else:  # By Account Number
-            person2_account = st.session_state.get('person2_account', '').strip()
-            if person2_account:
-                # Search for Person 2 by account if provided
-                person2_search_result = search_constituent_by_account_number(person2_account)
-                st.session_state['person2_search_result'] = person2_search_result
-                
-                if person2_search_result:
-                    st.success(f"✅ Found: {person2_search_result['FirstName']} {person2_search_result['LastName']} (ID: {person2_search_result['Id']})")
-                    
-                    # Check if they're already in a household
-                    person2_household = check_existing_household(person2_search_result)
-                    st.session_state['person2_existing_household'] = person2_household
-                    
-                    if person2_household:
-                        st.warning(f"⚠️ This person is already in household: {person2_household['FullName']} (ID: {person2_household['Id']})")
-                else:
-                    st.error("❌ Account number not found - person will be created as new constituent")
+        with col2:
+            st.markdown("### 👤 Person 2 (Parent)")
+            first2 = st.text_input("First Name", key="new_first2", placeholder="Jane")
+            last2 = st.text_input("Last Name", key="new_last2", placeholder="Smith")
+            rel2 = st.selectbox("Relationship", 
+                               options=["", "wife", "mother", "father", "husband","brother","sister"], 
+                               key="new_rel2",
+                               help="Select parent/spouse role")
     
-    # Display and edit children
+    else:  # By Account Number
+        with col1:
+            st.markdown("### 👤 Person 1 (Parent)")
+            account1 = st.text_input("Account Number", key="new_account1", placeholder="7722 or #7722")
+            rel1 = st.selectbox("Relationship", 
+                               options=["", "husband", "father", "mother", "wife","brother","sister"], 
+                               key="new_rel1_acc",
+                               help="Select parent/spouse role")
+            first1 = last1 = ""
+        
+        with col2:
+            st.markdown("### 👤 Person 2 (Parent)")
+            account2 = st.text_input("Account Number", key="new_account2", placeholder="7723 or #7723")
+            rel2 = st.selectbox("Relationship", 
+                               options=["", "wife", "mother", "father", "husband","brother","sister"], 
+                               key="new_rel2_acc",
+                               help="Select parent/spouse role")
+            first2 = last2 = ""
+
+        # Lookup names for account numbers
+        if search_method == "By Account Number":
+            if account1:
+                with st.spinner("Looking up account information..."):
+                    person1_data = search_constituent_by_account_number(account1)
+                    
+                    if person1_data:
+                        first1 = person1_data.get("FirstName", "")
+                        last1 = person1_data.get("LastName", "")
+                        st.success(f"✅ Found: {first1} {last1} (Account #{person1_data.get('AccountNumber')})")
+                    else:
+                        st.error(f"❌ Account number {account1} not found")
+            
+            # UPDATED: Only look up account2 if it has content AND is different from account1
+            if account2 and account2.strip() and account2.strip() != account1.strip():
+                with st.spinner("Looking up account information..."):
+                    person2_data = search_constituent_by_account_number(account2)
+                    
+                    if person2_data:
+                        first2 = person2_data.get("FirstName", "")
+                        last2 = person2_data.get("LastName", "")
+                        st.success(f"✅ Found: {first2} {last2} (Account #{person2_data.get('AccountNumber')})")
+                    else:
+                        st.error(f"❌ Account number {account2} not found")
+            else:
+                # Clear person2 data if account2 is empty
+                first2 = ""
+                last2 = ""
+    # Children section
+    st.markdown("---")
     st.markdown("### 👶 Children (Optional)")
     
-    col5, col6 = st.columns([3, 1])
-    
-    with col5:
-        if st.button("➕ Add Child", type="secondary"):
+    col_add, col_clear = st.columns([1, 4])
+    with col_add:
+        if st.button("➕ Add Child", type="secondary", key="new_add_child"):
             st.session_state['new_children'].append({
-                'first': '',
-                'last': '',
-                'relationship': 'daughter'
-            })   
+                'first_name': '',
+                'last_name': '',
+                'relationship': 'daughter',
+                'account_number': '' if search_method == "By Account Number" else None
+            })
+            st.rerun()
     
-    if st.session_state['new_children']:
-        st.markdown("**Children to add:**")
+    with col_clear:
+        if len(st.session_state['new_children']) > 0 and st.button("🗑️ Clear All Children", key="new_clear_children"):
+            st.session_state['new_children'] = []
+            st.rerun()
+    
+    # Display children inputs
+    for i, child in enumerate(st.session_state['new_children']):
+        st.markdown(f"#### 👶 Child {i+1}")
+        col1, col2, col3, col4 = st.columns([3, 3, 2, 1])
         
-        children_to_remove = []
-        for i, child in enumerate(st.session_state['new_children']):
-            col_first, col_last, col_rel, col_remove = st.columns([2, 2, 2, 1])
-            
-            with col_first:
-                child['first'] = st.text_input(
-                    f"First Name",
-                    value=child['first'],
-                    key=f"child_first_{i}",
-                    label_visibility="collapsed",
-                    placeholder="First name"
+        if search_method == "By Name":
+            with col1:
+                child['first_name'] = st.text_input(
+                    f"First Name", 
+                    value=child['first_name'],
+                    key=f"new_child_first_{i}",
+                    placeholder="Emma"
                 )
-            
-            with col_last:
-                child['last'] = st.text_input(
-                    f"Last Name",
-                    value=child['last'],
-                    key=f"child_last_{i}",
-                    label_visibility="collapsed",
-                    placeholder="Last name"
+            with col2:
+                child['last_name'] = st.text_input(
+                    f"Last Name", 
+                    value=child['last_name'],
+                    key=f"new_child_last_{i}",
+                    placeholder="Smith"
                 )
-            
-            with col_rel:
-                child['relationship'] = st.selectbox(
-                    f"Relationship",
-                    ["daughter", "son"],
-                    index=0 if child['relationship'] == 'daughter' else 1,
-                    key=f"child_rel_{i}",
-                    label_visibility="collapsed"
+        else:  # By Account Number
+            with col1:
+                child['account_number'] = st.text_input(
+                    f"Account Number", 
+                    value=child['account_number'],
+                    key=f"new_child_account_{i}",
+                    placeholder="7724 or #7724"
                 )
-            
-            with col_remove:
-                if st.button("🗑️", key=f"remove_child_{i}", help="Remove child"):
-                    children_to_remove.append(i)
+            with col2:
+                # Show looked up name if account number provided
+                if child['account_number']:
+                    child_data = search_constituent_by_account_number(child['account_number'])
+                    if child_data:
+                        child['first_name'] = child_data.get("FirstName", "")
+                        child['last_name'] = child_data.get("LastName", "")
+                        st.text(f"Name: {child['first_name']} {child['last_name']}")
+                    else:
+                        st.text("Name: Not found")
+                        child['first_name'] = child['last_name'] = ""
+                else:
+                    st.text("Name: Enter account number")
         
-        # Remove children (in reverse order to maintain indices)
-        for i in reversed(children_to_remove):
-            st.session_state['new_children'].pop(i)
-    
-    # Preview section (existing functionality continues...)
-    # [Rest of the function remains the same as the original create_new_household_interface]
-    
-    # Collect all people data
-    people_data = []
-    
-    # Person 1 data
-    person1_first = st.session_state.get('person1_first', '').strip()
-    person1_last = st.session_state.get('person1_last', '').strip()
-    person1_relationship = st.session_state.get('person1_relationship', '')
-    
-    if person1_first and person1_last:
-        person1_data = {
-            "FirstName": person1_first,
-            "LastName": person1_last
-        }
+        with col3:
+            child['relationship'] = st.selectbox(
+                f"Relationship",
+                options=["daughter", "son"],
+                index=0 if child['relationship'] == 'daughter' else 1,
+                key=f"new_child_rel_{i}"
+            )
         
-        # Add existing ID if found
-        if st.session_state.get('person1_search_result'):
-            found_person = st.session_state['person1_search_result']
-            person1_data["Id"] = found_person.get("Id")
-            # Copy other existing fields
-            for field in ["MiddleName", "Gender", "Birthdate"]:
-                if found_person.get(field):
-                    person1_data[field] = found_person[field]
+        with col4:
+            if st.button("❌", key=f"new_remove_child_{i}", help="Remove this child"):
+                st.session_state['new_children'].pop(i)
+                st.rerun()
         
-        people_data.append(person1_data)
+        # Update the session state
+        st.session_state['new_children'][i] = child
     
-    # Person 2 data
-    person2_first = st.session_state.get('person2_first', '').strip()
-    person2_last = st.session_state.get('person2_last', '').strip()
-    person2_relationship = st.session_state.get('person2_relationship', '')
+    # Preview section
+    has_person1 = first1 and last1
+    has_person2 = first2 and last2
+
+    # For account number method, also check if account numbers are actually filled
+    if search_method == "By Account Number":
+        has_person1 = account1 and account1.strip() and first1 and last1
+        has_person2 = (account2 and account2.strip() and 
+                      account2.strip() != account1.strip() and 
+                      first2 and last2)
+
     
-    if person2_first and person2_last:
-        person2_data = {
-            "FirstName": person2_first,
-            "LastName": person2_last
-        }
-        
-        # Add existing ID if found
-        if st.session_state.get('person2_search_result'):
-            found_person = st.session_state['person2_search_result']
-            person2_data["Id"] = found_person.get("Id")
-            # Copy other existing fields
-            for field in ["MiddleName", "Gender", "Birthdate"]:
-                if found_person.get(field):
-                    person2_data[field] = found_person[field]
-        
-        people_data.append(person2_data)
-    
-    # Add children
-    for child in st.session_state['new_children']:
-        if child['first'].strip() and child['last'].strip():
-            # Search for existing child
-            child_search_result = search_constituents(child['first'].strip(), child['last'].strip())
-            
-            child_data = {
-                "FirstName": child['first'].strip(),
-                "LastName": child['last'].strip()
-            }
-            
-            # Add existing ID if found
-            if child_search_result:
-                child_data["Id"] = child_search_result.get("Id")
-                # Copy other existing fields
-                for field in ["MiddleName", "Gender", "Birthdate"]:
-                    if child_search_result.get(field):
-                        child_data[field] = child_search_result[field]
-            
-            people_data.append(child_data)
-    
-    # Preview and creation logic (continues with existing implementation...)
-    if len(people_data) >= 1:
+    if has_person1 and (has_person2 or len(st.session_state.get('new_children', [])) > 0):
         st.markdown("---")
-        st.markdown("### 👀 Preview Household")
+        st.markdown("### 👀 Preview")
+        
+        # Determine proper order for parents
+        ordered_first1, ordered_last1, ordered_rel1 = first1, last1, rel1
+        ordered_first2, ordered_last2, ordered_rel2 = first2, last2, rel2
+        
+        # Only reorder if we have both parents
+        if has_person2 and rel1 and rel2 and should_be_first(rel2) and not should_be_first(rel1):
+            ordered_first1, ordered_last1, ordered_rel1 = first2, last2, rel2
+            ordered_first2, ordered_last2, ordered_rel2 = first1, last1, rel1
+            st.info("💡 Order adjusted: putting husband/father first")
+        
+        # Collect all valid children
+        valid_children = []
+        for child in st.session_state['new_children']:
+            if search_method == "By Name":
+                if child['first_name'] and child['last_name']:
+                    valid_children.append(child)
+            else:
+                if child['account_number'] and child['first_name'] and child['last_name']:
+                    valid_children.append(child)
         
         # Generate household names
-        person1_rel = person1_relationship
-        person2_rel = person2_relationship
+        household_names = format_household_names_with_relationship(
+            ordered_first1, ordered_last1, 
+            ordered_first2 if has_person2 else "", ordered_last2 if has_person2 else "",
+            ordered_rel1, ordered_rel2 if has_person2 else "", valid_children
+        )
         
-        if len(people_data) == 1:
-            # Single person household
-            household_names = format_household_names_with_relationship(
-                people_data[0]['FirstName'], 
-                people_data[0]['LastName'],
-                "", "",  # No second person
-                person1_relationship, ""  # Only first person's relationship
-            )
-        elif len(people_data) >= 2:
-            # Multi-person household
-            household_names = format_household_names_with_relationship(
-                people_data[0]['FirstName'], people_data[0]['LastName'],
-                people_data[1]['FirstName'], people_data[1]['LastName'],
-                person1_rel, person2_rel
-            )
+        # Display preview with edit option
+        col1, col2 = st.columns([1, 1])
         
-        # Preview household names
-        st.markdown("**Household Names:**")
-        for key, value in household_names.items():
-            st.text(f"• {key}: {value}")
-        
-        # Edit household names option
-        edit_names = st.checkbox("✏️ Edit household names manually", key="edit_names")
-        
-        if edit_names:
-            st.markdown("**Edit Names:**")
-            household_names["FullName"] = st.text_input("Full Name", value=household_names.get("FullName", ""))
-            household_names["SortName"] = st.text_input("Sort Name", value=household_names.get("SortName", ""))
-            household_names["InformalName"] = st.text_input("Informal Name", value=household_names.get("InformalName", ""))
-            household_names["FormalName"] = st.text_input("Formal Name", value=household_names.get("FormalName", ""))
-            household_names["EnvelopeName"] = st.text_input("Envelope Name", value=household_names.get("EnvelopeName", ""))
-            household_names["RecognitionName"] = st.text_input("Recognition Name", value=household_names.get("RecognitionName", ""))
-        
-        # Generate relationships
-        relationships = []
-        
-        if len(people_data) >= 2 and person1_rel and person2_rel:
-            # Relationship between Person 1 and Person 2
-            relationships.append((0, 1, person1_rel, person2_rel))
-        
-        # Relationships for children
-        for child_idx in range(2, len(people_data)):
-            child = st.session_state['new_children'][child_idx - 2]
-            child_rel = child['relationship']
+        with col1:
+            st.markdown("**Family Members (in order):**")
+            st.text(f"Head: {ordered_first1} {ordered_last1}")
+            if ordered_rel1:
+                st.text(f"   Role: {ordered_rel1}")
             
-            # Child to Person 1
-            if person1_rel:
-                parent1_rel = "father" if person1_rel in ["father", "husband"] else "mother"
-                relationships.append((0, child_idx, parent1_rel, child_rel))
+            if has_person2:
+                st.text(f"Member: {ordered_first2} {ordered_last2}")
+                if ordered_rel2:
+                    st.text(f"   Role: {ordered_rel2}")
             
-            # Child to Person 2
-            if len(people_data) >= 2 and person2_rel:
-                parent2_rel = "father" if person2_rel in ["father", "husband"] else "mother"
-                relationships.append((1, child_idx, parent2_rel, child_rel))
+            for i, child in enumerate(valid_children):
+                st.text(f"Member: {child['first_name']} {child['last_name']}")
+                st.text(f"   Role: {child['relationship']}")
+        
+        with col2:
+            # Toggle for editing
+            edit_mode = st.checkbox("✏️ Edit household names", help="Check this to customize the household naming", key="new_edit_mode")
+        
+        # Editable household names section
+        if edit_mode:
+            st.markdown("### ✏️ **Edit Household Names**")
+            st.info("💡 Modify any of the household names below for edge cases or special requirements")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                edited_full_name = st.text_input(
+                    "Full Name", 
+                    value=household_names["FullName"],
+                    help="Main household name",
+                    key="new_edit_full"
+                )
+                edited_sort_name = st.text_input(
+                    "Sort Name", 
+                    value=household_names["SortName"],
+                    help="Name used for sorting/searching",
+                    key="new_edit_sort"
+                )
+                edited_informal_name = st.text_input(
+                    "Informal Name", 
+                    value=household_names["InformalName"],
+                    help="Casual/friendly name",
+                    key="new_edit_informal"
+                )
+            
+            with col2:
+                edited_formal_name = st.text_input(
+                    "Formal Name", 
+                    value=household_names["FormalName"],
+                    help="Formal address name",
+                    key="new_edit_formal"
+                )
+                edited_envelope_name = st.text_input(
+                    "Envelope Name", 
+                    value=household_names["EnvelopeName"],
+                    help="Name for mailing envelopes",
+                    key="new_edit_envelope"
+                )
+                edited_recognition_name = st.text_input(
+                    "Recognition Name", 
+                    value=household_names["RecognitionName"],
+                    help="Name for recognition/awards",
+                    key="new_edit_recognition"
+                )
+            
+            # Update household_names with edited values
+            household_names = {
+                "FullName": edited_full_name,
+                "SortName": edited_sort_name,
+                "InformalName": edited_informal_name,
+                "FormalName": edited_formal_name,
+                "EnvelopeName": edited_envelope_name,
+                "RecognitionName": edited_recognition_name
+            }
+            
+            # Show warning if names were changed
+            original_names = format_household_names_with_relationship(
+                ordered_first1, ordered_last1, 
+                ordered_first2 if has_person2 else "", ordered_last2 if has_person2 else "",
+                ordered_rel1, ordered_rel2 if has_person2 else "", valid_children
+            )
+            
+            changes_made = any(household_names[key] != original_names[key] for key in household_names.keys())
+            if changes_made:
+                st.warning("⚠️ You have customized the household names. The edited names will be used.")
+        
+        else:
+            st.markdown("**Household Names:**")
+            for key, value in household_names.items():
+                st.text(f"{key}: {value}")
+        
+        # Show relationship preview
+        if (ordered_rel1 or ordered_rel2) and (has_person2 or valid_children):
+            st.markdown("**Relationships that will be created:**")
+            
+            # Parent relationships (only if both parents exist)
+            if has_person2 and ordered_rel1 and ordered_rel2:
+                parent_rel1 = ordered_rel1
+                parent_rel2 = ordered_rel2
+                if parent_rel1 in ['husband', 'wife'] and parent_rel2 in ['husband', 'wife']:
+                    st.text(f"• {ordered_first1} ({parent_rel1}) ↔ {ordered_first2} ({parent_rel2})")
+                elif parent_rel1 in ['father', 'mother'] and parent_rel2 in ['father', 'mother']:
+                    st.text(f"• {ordered_first1} ({parent_rel1}) and {ordered_first2} ({parent_rel2}) - unmarried parents")
+                elif parent_rel1 in ['brother', 'sister'] and parent_rel2 in ['brother', 'sister']:
+                    st.text(f"• {ordered_first1} ({parent_rel1}) ↔ {ordered_first2} ({parent_rel2})")
+            
+            # Parent-child relationships
+            for child in valid_children:
+                if ordered_rel1:
+                    parent1_to_child = get_parent_relationship_from_child(ordered_rel1, child['relationship'])
+                    st.text(f"• {ordered_first1} ({parent1_to_child}) ↔ {child['first_name']} ({child['relationship']})")
+                
+                if has_person2 and ordered_rel2:
+                    parent2_to_child = get_parent_relationship_from_child(ordered_rel2, child['relationship'])
+                    st.text(f"• {ordered_first2} ({parent2_to_child}) ↔ {child['first_name']} ({child['relationship']})")
             
             # Sibling relationships
-            for sibling_idx in range(2, child_idx):
-                sibling = st.session_state['new_children'][sibling_idx - 2]
-                sibling_rel = sibling['relationship']
-                
-                # Determine sibling relationship
-                if child_rel == "daughter":
-                    child_sibling_rel = "sister"
-                else:
-                    child_sibling_rel = "brother"
-                
-                if sibling_rel == "daughter":
-                    sibling_to_child_rel = "sister"
-                else:
-                    sibling_to_child_rel = "brother"
-                
-                relationships.append((sibling_idx, child_idx, sibling_to_child_rel, child_sibling_rel))
+            for i in range(len(valid_children)):
+                for j in range(i + 1, len(valid_children)):
+                    child1 = valid_children[i]
+                    child2 = valid_children[j]
+                    sib_rel1, sib_rel2 = get_sibling_relationship(child1['relationship'], child2['relationship'])
+                    st.text(f"• {child1['first_name']} ({sib_rel1}) ↔ {child2['first_name']} ({sib_rel2})")
         
-        # Preview relationships
-        if relationships:
-            st.markdown("**Relationships to create:**")
-            for person1_idx, person2_idx, rel1, rel2 in relationships:
-                person1_name = people_data[person1_idx]['FirstName']
-                person2_name = people_data[person2_idx]['FirstName']
-                st.text(f"• {person1_name} ({rel1}) ↔ {person2_name} ({rel2})")
-        
-        # Create household button
-        if st.button("🏠 Create Household", type="primary", key="create_household"):
-            with st.spinner("Creating household and relationships..."):
-                result = create_household_with_children(people_data, household_names, relationships)
+        # Store the final data in session state for use in creation
+        st.session_state['new_final_household_names'] = household_names
+        st.session_state['new_final_ordered_people'] = {
+            'person1': {'first': ordered_first1, 'last': ordered_last1, 'rel': ordered_rel1},
+            'person2': {'first': ordered_first2, 'last': ordered_last2, 'rel': ordered_rel2}
+        }
+        st.session_state['new_final_valid_children'] = valid_children
+    
+    # Create household button
+    st.markdown("---")
+    
+    # Check if we have the required data
+    has_required_data = (has_person1 and 
+                        'new_final_household_names' in st.session_state and 
+                        'new_final_ordered_people' in st.session_state and
+                        (has_person2 or len(st.session_state.get('new_final_valid_children', [])) > 0))
+    
+    if st.button("🚀 Create Household", type="primary", disabled=not has_required_data, key="new_create_household"):
+        with st.spinner("Creating household with all family members..."):
+            # Get the data from session state
+            household_names = st.session_state['new_final_household_names']
+            ordered_people = st.session_state['new_final_ordered_people']
+            valid_children = st.session_state.get('new_final_valid_children', [])
+            
+            final_first1 = ordered_people['person1']['first']
+            final_last1 = ordered_people['person1']['last']
+            final_rel1 = ordered_people['person1']['rel']
+            final_first2 = ordered_people['person2']['first']
+            final_last2 = ordered_people['person2']['last']
+            final_rel2 = ordered_people['person2']['rel']
+            
+            # Search for all constituents
+            all_people_data = []
+            all_relationships = []
+            
+            # Search for parents
+            if search_method == "By Name":
+                # Handle duplicates for parent 1
+                st.info(f"🔍 Searching for {final_first1} {final_last1}...")
+                duplicates1 = check_for_duplicate_names(final_first1, final_last1)
                 
-                if result:
-                    st.success("✅ Household created successfully!")
-                    st.success(f"🏠 Household: {result.get('FullName')} (ID: {result.get('Id')})")
-                    
-                    # Clear the form
-                    st.session_state['new_children'] = []
-                    st.session_state['person1_search_result'] = None
-                    st.session_state['person1_existing_household'] = None
-                    st.session_state['person2_search_result'] = None
-                    st.session_state['person2_existing_household'] = None
-                    
-                    # Clear input fields
-                    for key in ['person1_first', 'person1_last', 'person1_account', 'person1_relationship',
-                               'person2_first', 'person2_last', 'person2_account', 'person2_relationship']:
-                        if key in st.session_state:
-                            st.session_state[key] = ''
-                    
-                    st.balloons()
+                if len(duplicates1) > 1:
+                    st.warning(f"⚠️ Found {len(duplicates1)} people named {final_first1} {final_last1}")
+                    # For now, take the first match - in a real app, you'd want user selection
+                    person1 = duplicates1[0]
+                    st.info(f"Selected: Account #{person1.get('AccountNumber')}")
                 else:
-                    st.error("❌ Failed to create household")
+                    person1 = search_constituents(final_first1, final_last1)
+                
+                # Handle duplicates for parent 2 (only if person 2 exists)
+                if has_person2 and final_first2 and final_last2:
+                    st.info(f"🔍 Searching for {final_first2} {final_last2}...")
+                    duplicates2 = check_for_duplicate_names(final_first2, final_last2)
+                    
+                    if len(duplicates2) > 1:
+                        st.warning(f"⚠️ Found {len(duplicates2)} people named {final_first2} {final_last2}")
+                        person2 = duplicates2[0]
+                        st.info(f"Selected: Account #{person2.get('AccountNumber')}")
+                    else:
+                        person2 = search_constituents(final_first2, final_last2)
+                else:
+                    person2 = None
+            
+            else:  # By Account Number
+                st.info(f"🔍 Looking up account #{account1}...")
+                person1 = search_constituent_by_account_number(account1)
+                
+                if has_person2 and account2 and account2.strip():
+                    st.info(f"🔍 Looking up account #{account2}...")
+                    person2 = search_constituent_by_account_number(account2)
+                else:
+                    person2 = None
+            
+            # Handle missing parents
+            if not person1:
+                st.warning(f"⚠️ {final_first1} {final_last1} not found - will create new constituent")
+                person1 = {
+                    "FirstName": final_first1,
+                    "LastName": final_last1,
+                    "Type": "Individual",
+                    "Status": "Active"
+                }
+            else:
+                st.success(f"✅ Found {final_first1} {final_last1} (ID: {person1.get('Id')})")
+            
+            if has_person2 and final_first2 and final_last2:
+                if not person2:
+                    st.warning(f"⚠️ {final_first2} {final_last2} not found - will create new constituent")
+                    person2 = {
+                        "FirstName": final_first2,
+                        "LastName": final_last2,
+                        "Type": "Individual",
+                        "Status": "Active"
+                    }
+                else:
+                    st.success(f"✅ Found {final_first2} {final_last2} (ID: {person2.get('Id')})")
+            
+            # Add parents to people data
+            all_people_data.append(person1)  # Head (index 0)
+            if has_person2:
+                all_people_data.append(person2)  # Member (index 1)
+            
+            # Search for children
+            children_data = []
+            for i, child in enumerate(valid_children):
+                if search_method == "By Name":
+                    st.info(f"🔍 Searching for child {child['first_name']} {child['last_name']}...")
+                    child_person = search_constituents(child['first_name'], child['last_name'])
+                else:
+                    st.info(f"🔍 Looking up child account #{child['account_number']}...")
+                    child_person = search_constituent_by_account_number(child['account_number'])
+                
+                if not child_person:
+                    st.warning(f"⚠️ {child['first_name']} {child['last_name']} not found - will create new constituent")
+                    child_person = {
+                        "FirstName": child['first_name'],
+                        "LastName": child['last_name'],
+                        "Type": "Individual",
+                        "Status": "Active"
+                    }
+                else:
+                    st.success(f"✅ Found {child['first_name']} {child['last_name']} (ID: {child_person.get('Id')})")
+                
+                children_data.append(child_person)
+                # Children start at index 1 (if no second parent) or 2 (if two parents)
+                child_index = len(all_people_data)
+                all_people_data.append(child_person)
+            
+            # Build relationships
+            # Parent relationships (if both have relationship roles and both exist)
+            if person2 and final_rel1 and final_rel2:
+                # Check if it's a married couple vs unmarried parents
+                if final_rel1 in ['husband', 'wife'] and final_rel2 in ['husband', 'wife']:
+                    all_relationships.append((0, 1, final_rel1, final_rel2))
+                elif final_rel1 in ['brother', 'sister'] and final_rel2 in ['brother', 'sister']:
+                    all_relationships.append((0, 1, final_rel1, final_rel2))
+                # For unmarried parents (father/mother), we don't create a relationship between them
+            
+            # Parent-child relationships
+            first_child_index = 2 if person2 else 1
+            for i, child in enumerate(valid_children):
+                child_index = first_child_index + i
+                
+                # Parent 1 to child
+                if final_rel1:
+                    parent1_to_child = get_parent_relationship_from_child(final_rel1, child['relationship'])
+                    all_relationships.append((0, child_index, parent1_to_child, child['relationship']))
+                
+                # Parent 2 to child (only if parent 2 exists)
+                if person2 and final_rel2:
+                    parent2_to_child = get_parent_relationship_from_child(final_rel2, child['relationship'])
+                    all_relationships.append((1, child_index, parent2_to_child, child['relationship']))
+            
+            # Sibling relationships
+            for i in range(len(valid_children)):
+                for j in range(i + 1, len(valid_children)):
+                    child1_index = first_child_index + i
+                    child2_index = first_child_index + j
+                    sib_rel1, sib_rel2 = get_sibling_relationship(
+                        valid_children[i]['relationship'], 
+                        valid_children[j]['relationship']
+                    )
+                    all_relationships.append((child1_index, child2_index, sib_rel1, sib_rel2))
+            
+            # Create household with all members and relationships
+            st.info("🏠 Creating household with all family members...")
+            
+            household_result = create_household_with_children(
+                all_people_data, household_names, all_relationships
+            )
+            
+            if household_result:
+                st.success("🎉 Household created successfully!")
+                
+                # Display results
+                st.markdown("### ✅ Family Household Created")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**Household Details:**")
+                    st.text(f"ID: {household_result.get('Id', 'N/A')}")
+                    st.text(f"Name: {household_result.get('FullName', 'N/A')}")
+                    
+                    if household_result.get('FullName'):
+                        st.markdown("**All Names:**")
+                        name_fields = ['FullName', 'SortName', 'InformalName', 'FormalName', 'EnvelopeName', 'RecognitionName']
+                        for field in name_fields:
+                            if household_result.get(field):
+                                st.text(f"{field}: {household_result[field]}")
+                
+                with col2:
+                    st.markdown("**Family Members:**")
+                    st.text(f"Head: {final_first1} {final_last1} ({final_rel1})")
+                    if person1.get('Id'):
+                        st.text(f"  ID: {person1['Id']}")
+                    
+                    if person2:
+                        st.text(f"Member: {final_first2} {final_last2} ({final_rel2})")
+                        if person2.get('Id'):
+                            st.text(f"  ID: {person2['Id']}")
+                    
+                    for i, child in enumerate(valid_children):
+                        st.text(f"Member: {child['first_name']} {child['last_name']} ({child['relationship']})")
+                        if children_data[i].get('Id'):
+                            st.text(f"  ID: {children_data[i]['Id']}")
+                
+                # Show relationship summary
+                if all_relationships:
+                    st.markdown("**✅ Relationships Created:**")
+                    relationship_text = []
+                    for person1_idx, person2_idx, rel1, rel2 in all_relationships:
+                        person1_name = all_people_data[person1_idx]['FirstName']
+                        person2_name = all_people_data[person2_idx]['FirstName']
+                        relationship_text.append(f"• {person1_name} ({rel1}) ↔ {person2_name} ({rel2})")
+                    
+                    for rel_text in relationship_text:
+                        st.text(rel_text)
+                
+                # Show equivalent command for reference
+                with st.expander("📋 Equivalent Command Line"):
+                    if person2:
+                        command = f"python3 bloom_house.py --names \"{final_first1},{final_last1},{final_first2},{final_last2}"
+                        if final_rel1 and final_rel2:
+                            command += f",{final_rel1},{final_rel2}"
+                        command += "\""
+                    else:
+                        command = f"python3 bloom_house.py --names \"{final_first1},{final_last1}"
+                        if final_rel1:
+                            command += f",,{final_rel1}"
+                        command += "\""
+                    
+                    st.code(command)
+                    if valid_children:
+                        st.info("Note: Command line version doesn't support children yet.")
 
 def on_relationship_change():
     """Callback function when relationship dropdowns change"""
@@ -1195,31 +1355,6 @@ def auto_search_new_person_by_account():
         st.session_state['new_person_data'] = new_person
     else:
         st.session_state['new_person_data'] = None
-
-def auto_search_person_by_name(person_number):
-    """Auto-search callback for person by name in create new household"""
-    first_key = f'person{person_number}_first'
-    last_key = f'person{person_number}_last'
-    result_key = f'person{person_number}_search_result'
-    household_key = f'person{person_number}_existing_household'
-    
-    person_first = st.session_state.get(first_key, '').strip()
-    person_last = st.session_state.get(last_key, '').strip()
-    
-    if person_first and person_last:
-        # Search without spinner to avoid tab switching
-        person_data = search_constituents(person_first, person_last)
-        st.session_state[result_key] = person_data
-        
-        # Check if they're already in a household
-        if person_data and person_data.get('Id'):
-            person_household = check_existing_household(person_data)
-            st.session_state[household_key] = person_household
-        else:
-            st.session_state[household_key] = None
-    else:
-        st.session_state[result_key] = None
-        st.session_state[household_key] = None
 
 def add_to_existing_household_interface():
     """Interface for adding people to existing households"""
