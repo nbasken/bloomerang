@@ -697,29 +697,10 @@ def create_new_household_interface():
     if 'new_children' not in st.session_state:
         st.session_state['new_children'] = []
     
-    # Sidebar content moved to main area
-    st.markdown("### 📖 How to Use")
-    with st.expander("Click for instructions"):
-        st.markdown("""
-        1. **Enter names** for both parents
-        2. **Select relationships** (husband/wife or father/mother)
-        3. **Add children** if needed (use Add Child button)
-        4. **Preview** the household naming
-        5. **Edit names** if needed (check the edit box)
-        6. **Create** the household with all relationships
-        
-        The app will:
-        - Search for existing constituents
-        - Create new ones if needed
-        - Apply proper naming conventions
-        - Create all family relationships automatically
-        """)
-    
     # Input method selection
-    st.markdown("### 🔍 Search Method")
     search_method = st.radio(
         "How would you like to identify people?",
-        ["By Name", "By Account Number"],
+        ["By Account Number", "By Name"],
         help="Names work for most cases, but Account Numbers are unique if there are duplicate names",
         key="new_search_method"
     )
@@ -740,7 +721,7 @@ def create_new_household_interface():
         with col2:
             st.markdown("### 👤 Person 2 (Parent)")
             first2 = st.text_input("First Name", key="new_first2", placeholder="Jane")
-            last2 = st.text_input("Last Name", key="new_last2", placeholder="Smith")
+            last2 = st.text_input("Last Name", key="new_last2", placeholdeßr="Smith")
             rel2 = st.selectbox("Relationship", 
                                options=["", "wife", "mother", "father", "husband"], 
                                key="new_rel2",
@@ -1858,8 +1839,22 @@ def main():
     st.title("🏠 Bloomerang Household Manager")
     st.markdown("Create new households or add people to existing households")
     
-    with st.expander("📖 Family Types & Instructions"):
+    with st.expander("📖Instructions & Family Types"):
         st.markdown("""
+        ### Instructions
+        1. **Enter names** for both adults (or just one if single parent)
+        2. **Select relationships** (or leave blank if none)
+        3. **Add children** if needed (use Add Child button)
+        4. **Preview** the household naming
+        5. **Edit names** if needed (check the edit box)
+        6. **Create** the household with all relationships
+        
+        The app will:
+        - Search for existing constituents
+        - Create new ones if needed
+        - Apply proper naming conventions
+        - Create all family relationships automatically
+                    
         ### Family Types
         **Married Parents + Children:**
         - Person 1: husband, Person 2: wife
