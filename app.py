@@ -717,12 +717,12 @@ def create_new_household_interface():
         key="search_method"
     )
     
-    # Person 1 (Parent) Section
-    st.markdown("### 👤 Person 1 (Parent)")
-    
     col1, col2 = st.columns(2)
     
+    # Parent 1 (Left Column)
     with col1:
+        st.markdown("**👤 Parent 1**")
+        
         if search_method == "By Name":
             person1_first = st.text_input(
                 "First Name", 
@@ -754,91 +754,62 @@ def create_new_household_interface():
                 key="person1_last",
                 placeholder="Last name..."
             )
-    
-    with col2:
+        
         person1_relationship = st.selectbox(
             "Relationship", 
             ["", "father", "mother", "husband", "wife"],
             key="person1_relationship",
             help="Leave blank if no specific relationship needed"
         )
-    
-    # Display Person 2 search results
-    if search_method == "By Name":
-        person2_first = st.session_state.get('person2_first', '').strip()
-        person2_last = st.session_state.get('person2_last', '').strip()
-        if person2_first and person2_last:
-            if st.session_state.get('person2_search_result'):
-                person2_data = st.session_state['person2_search_result']
-                st.success(f"✅ Found: {person2_data['FirstName']} {person2_data['LastName']} (ID: {person2_data['Id']})")
-                
-                # Check if they're already in a household
-                if st.session_state.get('person2_existing_household'):
-                    household = st.session_state['person2_existing_household']
-                    st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
+        
+        # Display Person 1 search results
+        if search_method == "By Name":
+            person1_first = st.session_state.get('person1_first', '').strip()
+            person1_last = st.session_state.get('person1_last', '').strip()
+            if person1_first and person1_last:
+                if st.session_state.get('person1_search_result'):
+                    person1_data = st.session_state['person1_search_result']
+                    st.success(f"✅ Found: {person1_data['FirstName']} {person1_data['LastName']} (ID: {person1_data['Id']})")
+                    
+                    # Check if they're already in a household
+                    if st.session_state.get('person1_existing_household'):
+                        household = st.session_state['person1_existing_household']
+                        st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
+                    else:
+                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
                 else:
-                    st.info("ℹ️ Person exists but is not in a household - will be added to new household")
-            else:
-                st.error("❌ Person not found - will be created as new constituent")
-        elif person2_first or person2_last:  # Only show if partially filled
-            st.info("ℹ️ Enter both first and last name to search")
-    else:  # By Account Number
-        person2_account = st.session_state.get('person2_account', '').strip()
-        if person2_account:
-            if st.session_state.get('person2_search_result'):
-                person2_data = st.session_state['person2_search_result']
-                st.success(f"✅ Found: {person2_data['FirstName']} {person2_data['LastName']} (ID: {person2_data['Id']})")
+                    st.error("❌ Person not found - will be created as new constituent")
+            elif person1_first or person1_last:  # Only show if partially filled
+                st.info("ℹ️ Enter both first and last name to search")
+        else:  # By Account Number
+            person1_account = st.session_state.get('person1_account', '').strip()
+            if person1_account:
+                # Search for Person 1 by account if provided
+                person1_search_result = search_constituent_by_account_number(person1_account)
+                st.session_state['person1_search_result'] = person1_search_result
                 
-                # Check if they're already in a household
-                if st.session_state.get('person2_existing_household'):
-                    household = st.session_state['person2_existing_household']
-                    st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
+                if person1_search_result:
+                    st.success(f"✅ Found: {person1_search_result['FirstName']} {person1_search_result['LastName']} (ID: {person1_search_result['Id']})")
+                    
+                    # Auto-fill name fields
+                    st.session_state['person1_first'] = person1_search_result.get('FirstName', '')
+                    st.session_state['person1_last'] = person1_search_result.get('LastName', '')
+                    
+                    # Check if they're already in a household
+                    person1_household = check_existing_household(person1_search_result)
+                    st.session_state['person1_existing_household'] = person1_household
+                    
+                    if person1_household:
+                        st.warning(f"⚠️ This person is already in household: {person1_household['FullName']} (ID: {person1_household['Id']})")
+                    else:
+                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
                 else:
-                    st.info("ℹ️ Person exists but is not in a household - will be added to new household")
-            else:
-                st.error("❌ Account number not found - person will be created as new constituent")
+                    st.error("❌ Account number not found - person will be created as new constituent")
     
-    # Display Person 1 search results
-    if search_method == "By Name":
-        person1_first = st.session_state.get('person1_first', '').strip()
-        person1_last = st.session_state.get('person1_last', '').strip()
-        if person1_first and person1_last:
-            if st.session_state.get('person1_search_result'):
-                person1_data = st.session_state['person1_search_result']
-                st.success(f"✅ Found: {person1_data['FirstName']} {person1_data['LastName']} (ID: {person1_data['Id']})")
-                
-                # Check if they're already in a household
-                if st.session_state.get('person1_existing_household'):
-                    household = st.session_state['person1_existing_household']
-                    st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
-                else:
-                    st.info("ℹ️ Person exists but is not in a household - will be added to new household")
-            else:
-                st.error("❌ Person not found - will be created as new constituent")
-        elif person1_first or person1_last:  # Only show if partially filled
-            st.info("ℹ️ Enter both first and last name to search")
-    else:  # By Account Number
-        person1_account = st.session_state.get('person1_account', '').strip()
-        if person1_account:
-            if st.session_state.get('person1_search_result'):
-                person1_data = st.session_state['person1_search_result']
-                st.success(f"✅ Found: {person1_data['FirstName']} {person1_data['LastName']} (ID: {person1_data['Id']})")
-                
-                # Check if they're already in a household
-                if st.session_state.get('person1_existing_household'):
-                    household = st.session_state['person1_existing_household']
-                    st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
-                else:
-                    st.info("ℹ️ Person exists but is not in a household - will be added to new household")
-            else:
-                st.error("❌ Account number not found - person will be created as new constituent")
-    
-    # Person 2 (Optional) Section
-    st.markdown("### 👤 Person 2 (Optional)")
-    
-    col3, col4 = st.columns(2)
-    
-    with col3:
+    # Parent 2 (Right Column)
+    with col2:
+        st.markdown("**👤 Parent 2 (Optional)**")
+        
         if search_method == "By Name":
             person2_first = st.text_input(
                 "First Name", 
@@ -870,27 +841,57 @@ def create_new_household_interface():
                 key="person2_last",
                 placeholder="Last name..."
             )
-    
-    with col4:
+        
         person2_relationship = st.selectbox(
             "Relationship", 
             ["", "father", "mother", "husband", "wife"],
             key="person2_relationship",
             help="Leave blank if no specific relationship needed"
         )
-    
-    # Children Section (existing functionality)
-    st.markdown("### 👶 Children (Optional)")
-    
-    col5, col6 = st.columns([3, 1])
-    
-    with col5:
-        if st.button("➕ Add Child", type="secondary"):
-            st.session_state['new_children'].append({
-                'first': '',
-                'last': '',
-                'relationship': 'daughter'
-            })
+        
+        # Display Person 2 search results
+        if search_method == "By Name":
+            person2_first = st.session_state.get('person2_first', '').strip()
+            person2_last = st.session_state.get('person2_last', '').strip()
+            if person2_first and person2_last:
+                if st.session_state.get('person2_search_result'):
+                    person2_data = st.session_state['person2_search_result']
+                    st.success(f"✅ Found: {person2_data['FirstName']} {person2_data['LastName']} (ID: {person2_data['Id']})")
+                    
+                    # Check if they're already in a household
+                    if st.session_state.get('person2_existing_household'):
+                        household = st.session_state['person2_existing_household']
+                        st.warning(f"⚠️ This person is already in household: {household['FullName']} (ID: {household['Id']})")
+                    else:
+                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
+                else:
+                    st.error("❌ Person not found - will be created as new constituent")
+            elif person2_first or person2_last:  # Only show if partially filled
+                st.info("ℹ️ Enter both first and last name to search")
+        else:  # By Account Number
+            person2_account = st.session_state.get('person2_account', '').strip()
+            if person2_account:
+                # Search for Person 2 by account if provided
+                person2_search_result = search_constituent_by_account_number(person2_account)
+                st.session_state['person2_search_result'] = person2_search_result
+                
+                if person2_search_result:
+                    st.success(f"✅ Found: {person2_search_result['FirstName']} {person2_search_result['LastName']} (ID: {person2_search_result['Id']})")
+                    
+                    # Auto-fill name fields
+                    st.session_state['person2_first'] = person2_search_result.get('FirstName', '')
+                    st.session_state['person2_last'] = person2_search_result.get('LastName', '')
+                    
+                    # Check if they're already in a household
+                    person2_household = check_existing_household(person2_search_result)
+                    st.session_state['person2_existing_household'] = person2_household
+                    
+                    if person2_household:
+                        st.warning(f"⚠️ This person is already in household: {person2_household['FullName']} (ID: {person2_household['Id']})")
+                    else:
+                        st.info("ℹ️ Person exists but is not in a household - will be added to new household")
+                else:
+                    st.error("❌ Account number not found - person will be created as new constituent")
     
     # Display and edit children
     if st.session_state['new_children']:
@@ -1019,7 +1020,9 @@ def create_new_household_interface():
             # Single person household
             household_names = format_household_names_with_relationship(
                 people_data[0]['FirstName'], 
-                people_data[0]['LastName']
+                people_data[0]['LastName'],
+                "", "",  # No second person
+                person1_relationship, ""  # Only first person's relationship
             )
         elif len(people_data) >= 2:
             # Multi-person household
@@ -1243,7 +1246,6 @@ def auto_search_person_by_name(person_number):
     else:
         st.session_state[result_key] = None
         st.session_state[household_key] = None
-
 
 def add_to_existing_household_interface():
     """Interface for adding people to existing households"""
