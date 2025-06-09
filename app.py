@@ -788,9 +788,6 @@ def create_new_household_interface():
                 if person1_search_result:
                     st.success(f"✅ Found: {person1_search_result['FirstName']} {person1_search_result['LastName']} (ID: {person1_search_result['Id']})")
                     
-                    # Auto-fill name fields
-                    st.session_state['person1_first'] = person1_search_result.get('FirstName', '')
-                    st.session_state['person1_last'] = person1_search_result.get('LastName', '')
                     
                     # Check if they're already in a household
                     person1_household = check_existing_household(person1_search_result)
@@ -871,10 +868,6 @@ def create_new_household_interface():
                 if person2_search_result:
                     st.success(f"✅ Found: {person2_search_result['FirstName']} {person2_search_result['LastName']} (ID: {person2_search_result['Id']})")
                     
-                    # Auto-fill name fields
-                    st.session_state['person2_first'] = person2_search_result.get('FirstName', '')
-                    st.session_state['person2_last'] = person2_search_result.get('LastName', '')
-                    
                     # Check if they're already in a household
                     person2_household = check_existing_household(person2_search_result)
                     st.session_state['person2_existing_household'] = person2_household
@@ -885,6 +878,18 @@ def create_new_household_interface():
                     st.error("❌ Account number not found - person will be created as new constituent")
     
     # Display and edit children
+    st.markdown("### 👶 Children (Optional)")
+    
+    col5, col6 = st.columns([3, 1])
+    
+    with col5:
+        if st.button("➕ Add Child", type="secondary"):
+            st.session_state['new_children'].append({
+                'first': '',
+                'last': '',
+                'relationship': 'daughter'
+            })   
+    
     if st.session_state['new_children']:
         st.markdown("**Children to add:**")
         
