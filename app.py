@@ -721,7 +721,7 @@ def create_new_household_interface():
         with col2:
             st.markdown("### 👤 Person 2 (Parent)")
             first2 = st.text_input("First Name", key="new_first2", placeholder="Jane")
-            last2 = st.text_input("Last Name", key="new_last2", placeholdeßr="Smith")
+            last2 = st.text_input("Last Name", key="new_last2", placeholder="Smith")
             rel2 = st.selectbox("Relationship", 
                                options=["", "wife", "mother", "father", "husband"], 
                                key="new_rel2",
