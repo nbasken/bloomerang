@@ -1002,6 +1002,8 @@ def create_new_household_interface():
                     st.text(f"• {ordered_first1} ({parent_rel1}) ↔ {ordered_first2} ({parent_rel2})")
                 elif parent_rel1 in ['father', 'mother'] and parent_rel2 in ['father', 'mother']:
                     st.text(f"• {ordered_first1} ({parent_rel1}) and {ordered_first2} ({parent_rel2}) - unmarried parents")
+                elif parent_rel1 in ['brother', 'sister'] and parent_rel2 in ['brother', 'sister']:
+                    st.text(f"• {ordered_first1} ({parent_rel1}) ↔ {ordered_first2} ({parent_rel2})")
             
             # Parent-child relationships
             for child in valid_children:
