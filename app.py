@@ -714,7 +714,7 @@ def create_new_household_interface():
             first1 = st.text_input("First Name", key="new_first1", placeholder="John")
             last1 = st.text_input("Last Name", key="new_last1", placeholder="Smith")
             rel1 = st.selectbox("Relationship", 
-                               options=["", "husband", "father", "mother", "wife"], 
+                               options=["", "husband", "father", "mother", "wife","brother","sister"], 
                                key="new_rel1",
                                help="Select parent/spouse role")
         
@@ -723,7 +723,7 @@ def create_new_household_interface():
             first2 = st.text_input("First Name", key="new_first2", placeholder="Jane")
             last2 = st.text_input("Last Name", key="new_last2", placeholder="Smith")
             rel2 = st.selectbox("Relationship", 
-                               options=["", "wife", "mother", "father", "husband"], 
+                               options=["", "wife", "mother", "father", "husband","brother","sister"], 
                                key="new_rel2",
                                help="Select parent/spouse role")
     
@@ -732,7 +732,7 @@ def create_new_household_interface():
             st.markdown("### 👤 Person 1 (Parent)")
             account1 = st.text_input("Account Number", key="new_account1", placeholder="7722 or #7722")
             rel1 = st.selectbox("Relationship", 
-                               options=["", "husband", "father", "mother", "wife"], 
+                               options=["", "husband", "father", "mother", "wife","brother","sister"], 
                                key="new_rel1_acc",
                                help="Select parent/spouse role")
             first1 = last1 = ""
@@ -741,7 +741,7 @@ def create_new_household_interface():
             st.markdown("### 👤 Person 2 (Parent)")
             account2 = st.text_input("Account Number", key="new_account2", placeholder="7723 or #7723")
             rel2 = st.selectbox("Relationship", 
-                               options=["", "wife", "mother", "father", "husband"], 
+                               options=["", "wife", "mother", "father", "husband","brother","sister"], 
                                key="new_rel2_acc",
                                help="Select parent/spouse role")
             first2 = last2 = ""
